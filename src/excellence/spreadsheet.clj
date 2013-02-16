@@ -557,12 +557,9 @@ assoziativen Speicher (map):
   "Liefert den Wert der Tabellenzelle nach der Umwandlung in den
    vorgesehenen Spaltentyp: Argument als String oder Funktion"
   [cell  transformation]
-  (let [df (DataFormatter.)]
-    (if (= String (type transformation)) ; Prüft ob Funktion oder String
-      ((get column-types transformation) 
-       (get-cell-value cell) 
-       (.formatCellValue df cell))
-      (transformation (get-cell-value cell) (.formatCellValue df cell)))))
+  (if (= String (type transformation)) ; Prüft ob Funktion oder String
+    ((get column-types transformation) cell)
+    (transformation cell)))
   
 
 (defmulti set-cell-value! 
@@ -624,36 +621,39 @@ assoziativen Speicher (map):
 (defn varchar->double
   "Wandelt einen String in einen Double-Wert um. Falls die Umwandlung nicht gelingt,
 wir nil zurueckgegeben."
-  [v fv]
-  (condp = (type v)
-    java.lang.String   (if (= (.trim v) "")
-                         nil
-                         (.doubleValue (.parse (DecimalFormat. "#,###.00") v)))
-    java.lang.Double   v
-    nil))
+  [c]
+  (let [v (get-cell-value c)]
+    (condp = (type v)
+      java.lang.String   (if (= (.trim v) "")
+                           nil
+                           (.doubleValue (.parse (DecimalFormat. "#,###.00") v)))
+      java.lang.Double   v
+      nil)))
 
 
 (defn varchar->date
   "Wandelt einen String in einen Date-Wert um. Falls die Umwandlung nicht gelingt,
 wird nil zurueckgegeben."
-  [v fv]
-  (condp = (type v)
-    java.lang.String   (if (= (.trim v) "")
-                         nil
-                         (.parse (SimpleDateFormat. "d.M.yy") v))
-    java.util.Date     v
-    nil))
+  [c]
+  (let [v (get-cell-value c)]
+    (condp = (type v)
+      java.lang.String   (if (= (.trim v) "")
+                           nil
+                           (.parse (SimpleDateFormat. "d.M.yy") v))
+      java.util.Date     v
+      nil)))
 
 (defn all->varchar
-"Wandelt jeden Datentyp grundsätzlich in einen String-Wert um."
-  [v fv]
+"Wandelt jeden Datentyp in einer Zelle grundsätzlich in einen String-Wert um."
+  [c]
+  
   ;; (condp = (type v)
   ;;   java.lang.String   
   ;;   java.lang.Double   (.format (DecimalFormat. "#,###.00") v)
   ;;   java.util.Date     (.format (SimpleDateFormat. "dd.MM.yyyy") v)
   ;;   nil)
   ;;
-  fv)
+  (.formatCellValue (DataFormatter.) c))
 
 
 
@@ -686,6 +686,21 @@ dem Zellenwert.
 
 
 (defn db-values-seq
+  "Gibt eine Sequenz mit 'maps' für jede Datenzeilen zurueck.
+Parameter:
+- sheet:        Referenz auf das Tabellenblatt
+- columnnames:  Map mit den Spaltennummern und einer Spaltenbezeichnung (als String)
+                z. B. {0 spalte1 1 spalte 2 ...}
+- db-types:     Map mit den Spaltennummern und dem Datentyp (als String, siehe 'column-types'
+                in den der Zellenwert umgewandelt werden soll
+                z. B. {0 varchar 1 double 2 date}
+- begin-row:    in welcher Zeile begonnen wird
+Bsp:      
+(db-values-seq sh {0 spalte1 1 spalte2} {0 varchar 1 varchar} 0)
+#({:spalte1 00, :spalte2 bb} 
+  {:spalte1 11, :spalte2 11bb} 
+  {:spalte1 22, :spalte2 22bb} 
+  {:spalte1 33, :spalte2 33bb})"
   ([sheet columnnames db-types begin-row]
      (db-values-seq sheet columnnames db-types begin-row (get-last-row-num sheet)))
   ([sheet columnnames db-types begin-row end-row]
