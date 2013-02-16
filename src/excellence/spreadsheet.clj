@@ -37,7 +37,8 @@
 
 (declare
  ;; allgemeine Funktionen fuer Arbeitsmappen
- create-named-range! get-formula-evaluator create-workbook! load-workbook save-workbook!
+ create-named-range! get-formula-evaluator create-workbook! load-workbook
+ save-workbook!
  ;; Funktionen fuer Arbeitsblaetter
  add-sheet! delete-sheet! get-sheet get-sheet-name sheet-seq set-sheet-name!
  update-formulas!
@@ -337,6 +338,7 @@ existiert wird eine Exception geworfen"
     (apply merge-with merge
            (map (fn [c] {(.getRowIndex c) 
                          {(.getColumnIndex c) 
+
                           (fun c)}}) 
                 cs))))
 (defmethod indexed-*-map :coordinates-vec  [x index-type fun]
@@ -557,7 +559,9 @@ assoziativen Speicher (map):
   [cell  transformation]
   (let [df (DataFormatter.)]
     (if (= String (type transformation)) ; Prüft ob Funktion oder String
-      ((get column-types transformation) (get-cell-value cell) (.formatCellValue df cell))
+      ((get column-types transformation) 
+       (get-cell-value cell) 
+       (.formatCellValue df cell))
       (transformation (get-cell-value cell) (.formatCellValue df cell)))))
   
 
@@ -660,7 +664,8 @@ wird nil zurueckgegeben."
 
 
 (defn columnindex-value-map
-  "Liest eine Tabellenzeile und erzeugt eine Map mit der Spaltennummer und dem Zellenwert.
+  "Liest eine Tabellenzeile und erzeugt eine Map mit der Spaltennummer und 
+dem Zellenwert.
    Zeilennummern beginnen bei null.
    z. B. {0 2 , 1 Wert , 2 2 , 3 Hello}"
   ([#^Sheet sheet row-num]
@@ -685,7 +690,8 @@ wird nil zurueckgegeben."
      (db-values-seq sheet columnnames db-types begin-row (get-last-row-num sheet)))
   ([sheet columnnames db-types begin-row end-row]
      (let [rows (filter 
-                 (fn [r] (and (>= (.getRowNum r) begin-row)(<= (.getRowNum r) end-row))) 
+                 (fn [r] (and (>= (.getRowNum r) begin-row)
+                              (<= (.getRowNum r) end-row))) 
                  (row-seq sheet))]
        (for [r rows] 
          (into 
@@ -704,9 +710,7 @@ wird nil zurueckgegeben."
   ([#^Sheet sheet begin-row-num]
      (columnindex-value-map sheet  (int begin-row-num)))
   ([#^Row begin-row]
-     (columnindex-value-map (.getSheet begin-row) (.getRowNum begin-row))
-     ;; (drop (- (.getRowNum begin-row) 1) (row-seq (.getSheet (.getRowNum begin-row))))
-     ))
+     (columnindex-value-map (.getSheet begin-row) (.getRowNum begin-row))))
 
 
 
