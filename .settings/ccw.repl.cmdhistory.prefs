@@ -1,0 +1,2 @@
+cmdhistory=[";; Switching to excellence.spreadsheet namespace" "(def wb (load-workbook \\"/Users/anwender/Documents/test.xls\\"))" "(def sh (get-sheet wb \\"Grunddaten\\"))" "(indexed-value-map sh \:address-string)" "(indexed-value-map sh \:rol-col-vec)" "(indexed-value-map sh \:coord-sys-vec)"]
+eclipse.preferences.version=1
