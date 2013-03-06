@@ -61,19 +61,32 @@
 ;;; Funktionen fuer Arbeitsmappen
  
 (defn get-formula-evaluator 
-  "Erzeugt den Formel-Auswerter fuer die Arbeitsmappe"
+  "Erzeugt den Formel-Auswerter fuer die Arbeitsmappe.
+Parameter:
+- workbook: Referenz auf eine 'workbook'-Referenz
+Beispiel:
+(get-formula-evaluator wb)"
   [#^Workbook workbook]
   (.. workbook (getCreationHelper) (createFormulaEvaluator)))
 
 
 (defn workbook
-  "Erzeuge oder oeffne eine neue Arbeitsmappe."
+  "Erzeugt oder oeffne eine neue Arbeitsmappe.
+Parameter:
+- path:  Pfad zu einer Datei (optional)
+Beispiel:
+(workbook)
+(workbook '/User/Documents/xy/test.xls') "
   ([] (XSSFWorkbook.))
-  ([input] (WorkbookFactory/create (io/input-stream input))))
+  ([path] (WorkbookFactory/create (io/input-stream path))))
 
 
 (defn create-workbook!
-  "erzeugt eine leere Arbeitsmmappe"
+  "Erzeugt eine leere Arbeitsmmappe.
+Parameter:
+- sheet-name: Name (String) des zu erzeugenden Tabellenblattes (optional)
+(create-workbook!)
+(create-workbook! 'Blatt1') "
   ([]
    (create-workbook! "1"))
   ([sheet-name]
@@ -646,7 +659,6 @@ wird nil zurueckgegeben."
 (defn all->varchar
 "Wandelt jeden Datentyp in einer Zelle grundsätzlich in einen String-Wert um."
   [c]
-  
   ;; (condp = (type v)
   ;;   java.lang.String   
   ;;   java.lang.Double   (.format (DecimalFormat. "#,###.00") v)
@@ -697,7 +709,7 @@ Parameter:
 - begin-row:    in welcher Zeile begonnen wird
 Bsp:      
 (db-values-seq sh {0 spalte1 1 spalte2} {0 varchar 1 varchar} 0)
-#({:spalte1 00, :spalte2 bb} 
+({:spalte1 00, :spalte2 bb} 
   {:spalte1 11, :spalte2 11bb} 
   {:spalte1 22, :spalte2 22bb} 
   {:spalte1 33, :spalte2 33bb})"
