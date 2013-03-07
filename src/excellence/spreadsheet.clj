@@ -378,12 +378,12 @@ existiert wird eine Exception geworfen"
   "Speichert Zellreferenzen eines Zellbereiches in einen 
 assoziativen Speicher (map):
    'index-type' steuert den Aufbau der Datenstruktur:
-   :address-key         - {:A1 foo :A2 bar}
-   :address-nested-map  - {:1 {:A foo} :2 {:A bar}}
-   :row-col-vec         _ {[0 0] foo [0 1] bar}
-   :row-col-nested-map  - {0 {0 foo} 0 {1 :bar}}
-   :coordinates-vec       - {[zeile1 spalte1] foo [zeile1 spalte1] bar}
-   :coordinates-nested-map- {:zeile1 {:spalte1 foo} :zeile1 {:spalte2 bar}}"
+   :address-key            - {:A1 foo :A2 bar}
+   :address-nested-map     - {:1 {:A foo} :2 {:A bar}}
+   :row-col-vec            - {[0 0] foo [0 1] bar}
+   :row-col-nested-map     - {0 {0 foo} 0 {1 :bar}}
+   :coordinates-vec        - {[zeile1 spalte1] foo [zeile1 spalte1] bar}
+   :coordinates-nested-map - {:zeile1 {:spalte1 foo} :zeile1 {:spalte2 bar}}"
   [x index-type]
   (indexed-*-map x index-type identity))
 
@@ -391,12 +391,12 @@ assoziativen Speicher (map):
 (defn indexed-value-map
   "Laedt den Inhalt eines Zellbereiches in einen assoziativen Speicher (map):
 'index-type' steuert den Aufbau der Datenstruktur:
-:address-key         - {:A1 foo :A2 bar}
-:address-nested-map  - {:1 {:A foo} :2 {:A bar}}
-:row-col-vec         _ {[0 0] foo [0 1] bar}
-:row-col-nested-map  - {0 {0 foo} 0 {1 :bar}}
-:coord-sys-vec       - {[zeile1 spalte1] foo [zeile1 spalte1] bar}
-:coord-sys-nested-map- {:zeile1 {:spalte1 foo} :zeile1 {:spalte2 bar}}"
+:address-key            - {:A1 foo :A2 bar}
+:address-nested-map     - {:1 {:A foo} :2 {:A bar}}
+:row-col-vec            - {[0 0] foo [0 1] bar}
+:row-col-nested-map     - {0 {0 foo} 0 {1 :bar}}
+:coordinates-vec        - {[zeile1 spalte1] foo [zeile1 spalte1] bar}
+:coordinates-nested-map - {:zeile1 {:spalte1 foo} :zeile1 {:spalte2 bar}}"
   [x index-type]
   (indexed-*-map x index-type get-cell-value))
 
