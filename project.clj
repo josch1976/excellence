@@ -1,4 +1,4 @@
-(defproject excellence "1.0.0-SNAPSHOT"
+(defproject excellence "1.0.1"
   :description "Funktionen für die Datenextraktion aus Excel-Dateien"
   :url "http://github.com/josch1976/excellence"
   :license {:name "MIT License"

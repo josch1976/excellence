@@ -27,8 +27,8 @@
    (java.io File FileInputStream FileOutputStream)
    (java.text DecimalFormat SimpleDateFormat)
    (java.util Calendar Date GregorianCalendar Locale)
-   (org.apache.poi.xssf.usermodel XSSFWorkbook XSSFRichTextString)
-   (org.apache.poi.hssf.usermodel HSSFWorkbook HSSFRichTextString)
+   (org.apache.poi.xssf.usermodel XSSFWorkbook)
+   (org.apache.poi.hssf.usermodel HSSFWorkbook)
    (org.apache.poi.ss.usermodel Cell CellStyle DataFormatter DateUtil Font
                                 FormulaEvaluator IndexedColors RichTextString
                                 Row Sheet Workbook WorkbookFactory)
@@ -580,7 +580,7 @@ assoziativen Speicher (map):
    Wert in die Tabellenzelle"
   (fn [c v] (type v)))
 (defmethod set-cell-value! java.lang.String [c v] 
-  (.setCellValue c (XSSFRichTextString. v)))
+  (.setCellValue c v))
 (defmethod set-cell-value! java.util.Date [c v] 
   (doto c
     (.setCellValue v)
@@ -756,7 +756,7 @@ Bsp:
       (-> 
         dest-row
         (get-create-cell! (.getColumnIndex c)) 
-        (.setCellValue (HSSFRichTextString. v))))))
+        (.setCellValue v)))))
 
 
 (defn apply-date-format! [cell format]

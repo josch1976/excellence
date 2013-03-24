@@ -7,16 +7,18 @@
   <version>1.0.0-SNAPSHOT</version>
   <name>excellence</name>
   <description>Funktionen für die Datenextraktion aus Excel-Dateien</description>
-  <url>http://beispiel.de/fixme</url>
+  <url>http://github.com/josch1976/excellence</url>
   <licenses>
     <license>
       <name>MIT License</name>
-      <url>http://http://en.wikipedia.org/wiki/MIT_License</url>
+      <url>http:///en.wikipedia.org/wiki/MIT_License</url>
     </license>
   </licenses>
   <scm>
-    <tag>1c868bdc609235b3e9be4afcefaa9f2143074ca9</tag>
-    <url/>
+    <connection>scm:git:git://github.com/josch1976/excellence.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/josch1976/excellence.git</developerConnection>
+    <tag>fd59958470d82bc8746e7d89366957a53174efac</tag>
+    <url>https://github.com/josch1976/excellence</url>
   </scm>
   <build>
     <sourceDirectory>src</sourceDirectory>
@@ -68,12 +70,12 @@
     <dependency>
       <groupId>org.apache.poi</groupId>
       <artifactId>poi</artifactId>
-      <version>3.7</version>
+      <version>3.9</version>
     </dependency>
     <dependency>
       <groupId>org.apache.poi</groupId>
       <artifactId>poi-ooxml</artifactId>
-      <version>3.7</version>
+      <version>3.9</version>
     </dependency>
   </dependencies>
 </project>
