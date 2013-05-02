@@ -43,14 +43,14 @@
  add-sheet! delete-sheet! get-sheet get-sheet-name sheet-seq set-sheet-name!
  update-formulas!
  ;; Funktionen fuer Excel-Zeilen (rows)
- add-row-after-last! delete-all-rows! delete-row! get-create-row! get-last-row-num
- get-row insert-row-after! insert-row-before! row-seq
+ add-row-after-last! delete-all-rows! delete-row! get-create-next-row! 
+ get-create-row! get-last-row-num get-row insert-row-after! insert-row-before! row-seq
 ;; Funktionen fuer Excel-Zellen (cells)
  add-db-values-seq! add-value-rows! add-values! all->varchar apply-date-format! 
  cell-iterator cell-reference cell-seq column-types create-cell! 
  data-row-seq db-values-seq 
- get-cell-formula-value get-cell-value get-create-cell! get-last-column-num
- get-transformed-cell-value
+ get-cell-formula-value get-cell-value get-create-next-cell! get-create-cell! 
+ get-last-column-num get-transformed-cell-value
  indexed-cell-map indexed-value-map insert-db-values! into-seq
  last-day-in-month 
  set-cell-value! 
@@ -234,14 +234,18 @@ Parameter:
 (defn get-create-row!
   "liefert ein Row-Objekt - wenn diese Zeile noch nicht existiert, wird sie angelegt"
   [^Sheet sheet row-index]
-  (let [row (get-row sheet row-index)]
+  (let [row (get-row sheet (int row-index))]
     (if (nil? row)
-      (let [new-row (add-row-after-last! sheet)]
-        (loop [new-row new-row]
-            (if (= (.getRowNum new-row) row-index)
-              new-row
-              (recur (add-row-after-last! sheet)))))
-        row)))
+      (.createRow sheet (int row-index))
+      row)))
+
+(defn get-create-next-row!
+ "Liefert die auf aktuelle Zeile folgende Zeile. Wenn diese noch nicht
+existiert, wird diese neu erzeugt (z.B. wenn die aktuelle Zeile
+die letzte des Blattes ist."
+ [^Row row]
+ (get-create-row! (.getSheet row) 
+                  (+ (.getRowNum row) 1)))
 
 (defn delete-row!
   "Loescht eine Tabellenzeile eines Blattes"
@@ -616,7 +620,7 @@ assoziativen Speicher (map):
        (catch Exception e (prn "Index existiert nicht"))))
 
   
-(defn- get-create-cell!
+(defn get-create-cell!
  "Liefert eine Referenz auf ein 'Cell'-Objekt, das durch die Angaben
   Reihe 'r' und Zellennummer 'i' bestimmt wird. Wenn die Zelle nicht besteht
   wird eine neue angelegt."
@@ -627,6 +631,13 @@ assoziativen Speicher (map):
       (.createCell r (int i))
       cell)))
 
+(defn get-create-next-cell!
+ "Liefert die auf aktuelle Zelle folgende Zelle. Wenn diese noch nicht
+existiert, wird diese neu erzeugt (z.B. wenn die aktuelle Zelle
+die letzte der Zeile ist."
+ [^Cell cell]
+ (get-create-cell! (.getRow cell) 
+                   (+ (.getColumnIndex cell) 1)))
 
 ;;; ---------------------------------------------------------------------------
 ;;; Umwandlungsfunktionen
