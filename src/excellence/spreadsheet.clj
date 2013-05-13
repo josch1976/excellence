@@ -134,8 +134,7 @@ Parameter:
 (defn add-sheet! 
   "Fuegt ein leeres Blatt mit dem Namen 'sheet-name' hinzu."
   [^Workbook workbook sheet-name]
-  (doto workbook
-    (.createSheet sheet-name)))
+  (.createSheet workbook sheet-name))
 
 
 (defmulti delete-sheet!
@@ -173,7 +172,8 @@ Parameter:
  (defn set-sheet-name!
   "Benennt ein Arbeitsblatt um."
   [#^Sheet sheet sheet-name]
-  (.setSheetName sheet sheet-name))
+  (.setSheetName sheet sheet-name)
+  sheet)
 
 
 (defn sheet-seq 
@@ -287,7 +287,7 @@ die letzte des Blattes ist."
 existiert wird eine Exception geworfen"
   [^Sheet sheet row-index]
   (try (.getRow sheet row-index)
-       (catch Exception e (prn "Rowindex does't exist"))))
+       (catch Exception e (prn "der Rowindex " row-index " existiert nicht"))))
 
 
 (defn get-last-row-num
@@ -617,7 +617,7 @@ assoziativen Speicher (map):
 (defn get-cell
   [r i]
   (try (.getCell r i)
-       (catch Exception e (prn "Index existiert nicht"))))
+       (catch Exception e (prn "Der Cell-Index " i " existiert nicht"))))
 
   
 (defn get-create-cell!
