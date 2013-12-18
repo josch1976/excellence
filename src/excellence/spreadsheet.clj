@@ -1,20 +1,20 @@
-;; Copyright (c) <2013> <Joachim Scheffold>
+ ;; Copyright (c) <2013> <Joachim Scheffold>
 
-;; Permission is hereby granted, free of charge, to any person obtaining a copy of 
+;; Permission is hereby granted, free of charge, to any person obtaining a copy of
 ;; this software and associated documentation files (the "Software"), to deal in the
-;; Software without restriction, including without limitation the rights to use, 
+;; Software without restriction, including without limitation the rights to use,
 ;; copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
 ;; Software, and to permit persons to whom the Software is furnished to do so,
 ;; subject to the following conditions:
 
-;; The above copyright notice and this permission notice shall be included in all 
+;; The above copyright notice and this permission notice shall be included in all
 ;; copies or substantial portions of the Software.
 
 ;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 ;; INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
 ;; PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-;; HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION 
-;; OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
+;; HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+;; OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 ;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
@@ -23,7 +23,7 @@
 (ns excellence.spreadsheet
   (:require [clojure.java.io :as io]
             [clojure.string :as str])
-  (:import 
+  (:import
    (java.io File FileInputStream FileOutputStream)
    (java.text DecimalFormat SimpleDateFormat)
    (java.util Calendar Date GregorianCalendar Locale)
@@ -43,24 +43,24 @@
  add-sheet! delete-sheet! get-sheet get-sheet-name sheet-seq set-sheet-name!
  update-formulas!
  ;; Funktionen fuer Excel-Zeilen (rows)
- add-row-after-last! delete-all-rows! delete-row! get-create-next-row! 
+ add-row-after-last! delete-all-rows! delete-row! get-create-next-row!
  get-create-row! get-last-row-num get-row insert-row-after! insert-row-before! row-seq
 ;; Funktionen fuer Excel-Zellen (cells)
- add-db-values-seq! add-value-rows! add-values! all->varchar apply-date-format! 
- cell-iterator cell-reference cell-seq column-types create-cell! 
- data-row-seq db-values-seq 
- get-cell-formula-value get-cell-value get-create-next-cell! get-create-cell! 
+ add-db-values-seq! add-value-rows! add-values! all->varchar apply-date-format!
+ cell-iterator cell-reference cell-seq column-types create-cell!
+ data-row-seq db-values-seq
+ get-cell-formula-value get-cell-value get-create-next-cell! get-create-cell!
  get-last-column-num get-transformed-cell-value
  indexed-cell-map indexed-value-map insert-db-values! into-seq
- last-day-in-month 
- set-cell-value! 
- value-columnindex-map varchar->date varchar->double 
+ last-day-in-month
+ set-cell-value!
+ value-columnindex-map varchar->date varchar->double
  write-header!)
 
 ;;; ---------------------------------------------------------------------------
 ;;; Funktionen fuer Arbeitsmappen
- 
-(defn get-formula-evaluator 
+
+(defn get-formula-evaluator
   "Erzeugt den Formel-Auswerter fuer die Arbeitsmappe.
 Parameter:
 - workbook: Referenz auf eine 'workbook'-Referenz
@@ -95,43 +95,41 @@ Parameter:
      (add-sheet! sheet-name))))
 
 
-(defn load-workbook 
-  "Laedt eine Arbeitsmappe mit dem Namen 'file-name'."  
+(defn load-workbook
+  "Laedt eine Arbeitsmappe mit dem Namen 'file-name'."
   [file-name]
   (with-open [stream (FileInputStream. file-name)]
     (WorkbookFactory/create stream)))
 
 
-(defn save-workbook! 
+(defn save-workbook!
   "speichert eine Arbeitsmappe unter dem Namen 'save-name'."
   [^Workbook workbook file-name]
   (with-open [file-out (FileOutputStream. file-name)]
     (.write workbook file-out)))
 
-
 (defn create-named-range!
   "erzeuge benannten Bereich"
-  [^Workbook workbook sheet-name ref-string ref-name]
-  (doto (.createName workbook) 
-    (.setNameName ref-name) 
-    (.setReference (str sheet-name "!" ref-string)))) 
+  [^Sheet sheet ref-string ref-name]
+  (doto (.createName (.getWorkbook sheet))
+    (.setNameName ref-name)
+    (.setRefersToFormula (str (get-sheet-name sheet) "!" ref-string))))
 
-
-(defn update-named-range!
+(defn alter-named-range!
   "aktualisiere den Zellbereich für einen benannten Bereich"
-  [^Workbook workbook ref-name ref-string]
+  [^Workbook workbook ref-name new-ref-string]
   (let [named (.getName workbook ref-name)]
-        (.setReference 
-          named
-          (str (apply str (take-while (fn [c] (not= c \!)) (.getReference named)))
-               "!" 
-               ref-string))))
+    (.setRefersToFormula
+     named
+     (str (first (clojure.string/split (.getRefersToFormula named) #"!"))
+          "!"
+          new-ref-string))))
 
 
 ;;; ---------------------------------------------------------------------------
 ;;; Funktionen fuer Arbeitsblaetter
 
-(defn add-sheet! 
+(defn add-sheet!
   "Fuegt ein leeres Blatt mit dem Namen 'sheet-name' hinzu."
   [^Workbook workbook sheet-name]
   (.createSheet workbook sheet-name))
@@ -139,9 +137,9 @@ Parameter:
 
 (defmulti delete-sheet!
   "Loescht ein Arbeitsblatt einer Arbeitsmappe per Index oder Name."
-  (fn [^Workbook workbook index-or-name] 
-    (if (integer? index-or-name) 
-      :indexed 
+  (fn [^Workbook workbook index-or-name]
+    (if (integer? index-or-name)
+      :indexed
       :named)))
 (defmethod delete-sheet! :indexed [^Workbook workbook index-or-name]
   (doto workbook
@@ -153,9 +151,9 @@ Parameter:
 
 (defmulti get-sheet
   "Zugriff auf das Arbeitsblatt einer Arbeitsmappe per Index oder Name."
-  (fn [^Workbook workbook index-or-name] 
-    (if (integer? index-or-name) 
-      :indexed 
+  (fn [^Workbook workbook index-or-name]
+    (if (integer? index-or-name)
+      :indexed
       :named)))
 (defmethod get-sheet :indexed [^Workbook workbook index-or-name]
   (. workbook getSheetAt index-or-name))
@@ -176,7 +174,7 @@ Parameter:
   sheet)
 
 
-(defn sheet-seq 
+(defn sheet-seq
   "Liefert eine lazy seq aller Arbeitsblaetter einer Arbeitsmappe."
   [#^Workbook workbook]
   (for [idx (range (.getNumberOfSheets workbook))]
@@ -197,9 +195,9 @@ Parameter:
 ;;; vorhanden sein.
 
 (def col-index-mapping
-  (let [c-names (concat (map (fn [ch] (keyword (str (char ch)))) 
-                             (range 65 91)) 
-                        (for [x (range 65 91) y (range 65 91)] 
+  (let [c-names (concat (map (fn [ch] (keyword (str (char ch))))
+                             (range 65 91))
+                        (for [x (range 65 91) y (range 65 91)]
                           (keyword (str (char x) (char y)))))]
     (zipmap c-names
             (range (count c-names)))))
@@ -213,16 +211,16 @@ Parameter:
   ([^Row row]
      (insert-row-after! (.getSheet row) (.getRowNum row))))
 
-(defn add-row-after-last! 
+(defn add-row-after-last!
   "Fuegt eine neue Zeile nach der letzten (vorhandenen) Zeile an."
   [^Sheet sheet]
-  (let [row-num (if (= 0 (.getPhysicalNumberOfRows sheet)) 
-                  0 
+  (let [row-num (if (= 0 (.getPhysicalNumberOfRows sheet))
+                  0
                   (inc (.getLastRowNum sheet)))]
     (.createRow sheet row-num)))
 
 
-(defn insert-row-before! 
+(defn insert-row-before!
   "fuegt vor der Zeile eine neue leere Zeile ein"
   ([^Sheet sheet row-index]
      (.shiftRows sheet row-index (.getLastRowNum sheet) 1 true false)
@@ -244,14 +242,14 @@ Parameter:
 existiert, wird diese neu erzeugt (z.B. wenn die aktuelle Zeile
 die letzte des Blattes ist."
  [^Row row]
- (get-create-row! (.getSheet row) 
+ (get-create-row! (.getSheet row)
                   (+ (.getRowNum row) 1)))
 
 (defn delete-row!
   "Loescht eine Tabellenzeile eines Blattes"
   ([^Sheet sheet row-index]
-     (let [last-row-num (if (= 0 (.getPhysicalNumberOfRows sheet)) 
-                          0 
+     (let [last-row-num (if (= 0 (.getPhysicalNumberOfRows sheet))
+                          0
                           (inc (.getLastRowNum sheet)))]
        (cond (and (>= row-index 0) (< row-index last-row-num))
              (.shiftRows sheet (inc row-index) last-row-num -1)
@@ -263,7 +261,7 @@ die letzte des Blattes ist."
 
 (defn delete-rows!
   "Loescht mehrere Zeilen eines Blattes"
-  [^Sheet sheet row-indexes] 
+  [^Sheet sheet row-indexes]
   (doseq [i (sort > row-indexes)]
     (delete-row! sheet i)))
 
@@ -276,7 +274,7 @@ die letzte des Blattes ist."
   sheet)
 
 
-(defn row-seq 
+(defn row-seq
   "Liefert eine lazy sequence aller Zeilen einer Arbeitsmappe."
   [#^Sheet sheet]
   (iterator-seq (.iterator sheet)))
@@ -294,7 +292,7 @@ existiert wird eine Exception geworfen"
   "Ermittelt die letzte Zeile eines Arbeitsblattes 'sheet'"
   [^Sheet sheet]
   (apply max (map (fn [r] (.getRowNum r)) (row-seq  sheet))))
-  
+
 
 ;;; ---------------------------------------------------------------------------
 ;;; Funktion für Excel-Zellen (cells)
@@ -306,7 +304,7 @@ existiert wird eine Exception geworfen"
 
 
 (defmulti cell-seq
-  "Liefert eine Sequenz von Tabellenzellen abhaengig vom Argument, das ein 
+  "Liefert eine Sequenz von Tabellenzellen abhaengig vom Argument, das ein
    Tabellenblatt, eine Zeile oder eine Collection sein kann.
    Die Sequenz ist sortiert nach Blatt, Zeile und Spalte."
   (fn [x]
@@ -316,17 +314,26 @@ existiert wird eine Exception geworfen"
       (seq? x)               :coll
       ;:else                  :default
       )))
-(defmethod cell-seq :row  [row] 
+(defmethod cell-seq :row  [row]
   (iterator-seq (.iterator row)))
-(defmethod cell-seq :sheet [sheet] 
+(defmethod cell-seq :sheet [sheet]
   (for [row  (row-seq sheet)
         cell (cell-seq row)]
     cell))
-(defmethod cell-seq :coll [coll] 
+(defmethod cell-seq :coll [coll]
   (for [x coll,
         cell (cell-seq x)]
     cell))
 
+(defn extract-key
+  [^String s]
+  (let [b (.indexOf s "<-")
+        e (.indexOf s "->")]
+    (if (and (> b -1) (> e 2))
+      (.toUpperCase (.substring s (+ b 2) e))
+      "FEHLER")))
+
+(extract-key "<-sds->")
 
 (defmulti indexed-*-map
   (fn [x index-type fun]
@@ -338,25 +345,32 @@ existiert wird eine Exception geworfen"
 (defmethod indexed-*-map :address-nested-map [x index-type fun]
   (let [cs (cell-seq x)]
     (apply merge-with merge
-           (map (fn [c] 
+           (map (fn [c]
                   (let [cf (cell-reference c)
                         rw  (re-find #"\d+" cf)
                         cl  (re-find #"\D+" cf)]
-                    {(keyword rw) 
+                    {(keyword rw)
                      {(keyword cl)
-                      (fun c)}})) 
+                      (fun c)}}))
                 cs))))
 (defmethod indexed-*-map :row-col-vec  [x index-type fun]
   (let [cs (cell-seq x)]
     (zipmap (map (fn [c] [(.getRowIndex c) (.getColumnIndex c)]) cs)
             (map (fn [c] (fun c)) cs))))
+(defmethod indexed-*-map :comment-key [x index-type fun]
+  (let [cs (cell-seq x)]
+    (zipmap (map (fn [c] (if-let [cmt (.getCellComment c)]
+                           (extract-key (.getString (.getString cmt)))
+                           ("empty")))
+                   cs)
+            (map (fn [c] (fun c)) cs))))
 (defmethod indexed-*-map :row-col-nested-map [x index-type fun]
   (let [cs (cell-seq x)]
     (apply merge-with merge
-           (map (fn [c] {(.getRowIndex c) 
-                         {(.getColumnIndex c) 
+           (map (fn [c] {(.getRowIndex c)
+                         {(.getColumnIndex c)
 
-                          (fun c)}}) 
+                          (fun c)}})
                 cs))))
 (defmethod indexed-*-map :coordinates-vec  [x index-type fun]
   (let [cs (cell-seq x)
@@ -370,16 +384,16 @@ existiert wird eine Exception geworfen"
   (let [cs (cell-seq x)
         fr (first (row-seq x))]
     (apply merge-with merge
-           (map (fn [c] {(keyword (str (get-cell-value 
-                                        (get-create-cell! (.getRow c) 0)))) 
-                         {(keyword (str (get-cell-value (get-create-cell! 
-                                                         fr 
+           (map (fn [c] {(keyword (str (get-cell-value
+                                        (get-create-cell! (.getRow c) 0))))
+                         {(keyword (str (get-cell-value (get-create-cell!
+                                                         fr
                                                          (.getColumnIndex c)))))
-                          (fun c)}}) 
+                          (fun c)}})
                 cs))))
 
 (defn indexed-cell-map
-  "Speichert Zellreferenzen eines Zellbereiches in einen 
+  "Speichert Zellreferenzen eines Zellbereiches in einen
 assoziativen Speicher (map):
    'index-type' steuert den Aufbau der Datenstruktur:
    :address-key            - {:A1 foo :A2 bar}
@@ -438,28 +452,28 @@ assoziativen Speicher (map):
   "Baut auf der Funktion 'insert-db-values' auf. Nimmt als ersten Paramter eine
    Sequenz, die aus 'maps' mit Spaltennamen und Werten besteht, entgegen.
    z.B.: (insert-db-values! ({:name tom :alter 24 :beruf schreiner}
-                             {:name heinz :alter 22 :beruf schlosser}) 
+                             {:name heinz :alter 22 :beruf schlosser})
                             {:name 0 :alter 2 :beruf 4})"
   [sheet data columnnames]
   (doseq [row-data data]
-    (insert-db-values! 
-      (add-row-after-last! sheet) 
+    (insert-db-values!
+      (add-row-after-last! sheet)
       row-data
       columnnames)))
 
 
 (defn insert-db-values!
-  "nimmt als ersten Parameter eine 'map' mit den Spaltennamen und Werten 
+  "nimmt als ersten Parameter eine 'map' mit den Spaltennamen und Werten
    und als zweiten Parameter eine 'map' mit den Spaltennummern (nullbasiert)
    und den Spaltennamen und schreibt die Daten der ersten Map (vals) in
    eine Zeile eines Tabellenblattes
-   z.B.: (insert-db-values! {:name tom :alter 24 :beruf schreiner} 
+   z.B.: (insert-db-values! {:name tom :alter 24 :beruf schreiner}
                             {:name 0 :alter 2 :beruf 4})"
   [row row-data columnnames]
   (let [nc (zipmap (vals columnnames) (keys columnnames))]
     (doseq [cell-data row-data]
-      (set-cell-value! 
-       (create-cell! row (get nc (key cell-data))) 
+      (set-cell-value!
+       (create-cell! row (get nc (key cell-data)))
         (val cell-data)))))
 
 
@@ -483,7 +497,7 @@ assoziativen Speicher (map):
 (defmethod get-cell-value Cell/CELL_TYPE_BLANK   [cell]
   nil)
 (defmethod get-cell-value Cell/CELL_TYPE_FORMULA [cell]
-  (let [val            (. (get-formula-evaluator 
+  (let [val            (. (get-formula-evaluator
                              (.. cell getSheet getWorkbook))
                             evaluate cell)
         evaluated-type (. val getCellType)]
@@ -492,30 +506,32 @@ assoziativen Speicher (map):
                                     :date
                                     :number)
                                   evaluated-type))))
-(defmethod get-cell-value Cell/CELL_TYPE_BOOLEAN [cell] 
+(defmethod get-cell-value Cell/CELL_TYPE_BOOLEAN [cell]
   (. cell getBooleanCellValue))
-(defmethod get-cell-value Cell/CELL_TYPE_STRING  [cell] 
+(defmethod get-cell-value Cell/CELL_TYPE_STRING  [cell]
   (. cell getStringCellValue))
-(defmethod get-cell-value Cell/CELL_TYPE_NUMERIC [cell] 
+(defmethod get-cell-value Cell/CELL_TYPE_NUMERIC [cell]
   (. cell getNumericCellValue))
-(defmethod get-cell-value :date                  [cell] 
+(defmethod get-cell-value :date                  [cell]
   (. cell getDateCellValue))
-(defmethod get-cell-value :default [cell] 
+(defmethod get-cell-value :default [cell]
   (str "Unknown cell type " (. cell getCellType)))
 
 
 (defn- get-index-type [index]
-  (cond
-      (keyword? index)
-    :address-key
-    (and (= (type index) clojure.lang.PersistentVector)
-         (number? (first index))
-         (number? (second index)))
-    :row-col-vec   
-    (and (= (type index) clojure.lang.PersistentVector)
-         (keyword? (first index))
-         (keyword? (second index)))
-    :coordinates-vec))
+    (cond
+     (string? index)
+     :comment-key
+     (keyword? index)
+      :address-key
+      (and (= (type index) clojure.lang.PersistentVector)
+           (number? (first index))
+           (number? (second index)))
+      :row-col-vec
+      (and (= (type index) clojure.lang.PersistentVector)
+           (keyword? (first index))
+           (keyword? (second index)))
+      :coordinates-vec))
 
 
 (defmulti get-*-by-index
@@ -529,14 +545,19 @@ assoziativen Speicher (map):
                                              (= (second index) (.getColumnIndex c))))
                                 (cell-seq sheet)))]
       (fun res)))
+(defmethod get-*-by-index :comment-key [sheet index fun]
+  (when-let [res (first (filter (fn [c] (= index
+                                           (extract-key (.getString (.getString (.getCellComment c))))))
+                                (cell-seq sheet)))]
+      (fun res)))
 (defmethod get-*-by-index :coordinates-vec [sheet index fun]
   (let [fr (get-row sheet 0)]
-    (when-let [res (first 
-                    (filter 
+    (when-let [res (first
+                    (filter
                      (fn [c] (and (= (name (first index))
                                      (get-cell-value (get-create-cell! (.getRow c) 0)))
                                   (= (name (second index))
-                                     (get-cell-value 
+                                     (get-cell-value
                                       (get-create-cell! fr  (.getColumnIndex c))))))
                      (cell-seq sheet)))]
       (fun res))))
@@ -558,15 +579,15 @@ assoziativen Speicher (map):
    Formel, siehe http://poi.apache.org/spreadsheet/eval.html#Evaluate"
   (fn [evaled-cell evaled-type]
     evaled-type))
-(defmethod get-cell-formula-value Cell/CELL_TYPE_BOOLEAN [evaled-cell evaled-type] 
+(defmethod get-cell-formula-value Cell/CELL_TYPE_BOOLEAN [evaled-cell evaled-type]
   (. evaled-cell getBooleanValue))
-(defmethod get-cell-formula-value Cell/CELL_TYPE_STRING  [evaled-cell evaled-type] 
+(defmethod get-cell-formula-value Cell/CELL_TYPE_STRING  [evaled-cell evaled-type]
   (. evaled-cell getStringValue))
-(defmethod get-cell-formula-value :number  [evaled-cell evaled-type] 
+(defmethod get-cell-formula-value :number  [evaled-cell evaled-type]
   (. evaled-cell getNumberValue))
-(defmethod get-cell-formula-value :date    [evaled-cell evaled-type] 
+(defmethod get-cell-formula-value :date    [evaled-cell evaled-type]
   (DateUtil/getJavaDate (. evaled-cell getNumberValue)))
-(defmethod get-cell-formula-value :default [evaled-cell evaled-type] 
+(defmethod get-cell-formula-value :default [evaled-cell evaled-type]
   (str "Unknown cell type " (. evaled-cell getCellType)))
 
 
@@ -577,40 +598,40 @@ assoziativen Speicher (map):
   (if (= String (type transformation)) ; Prüft ob Funktion oder String
     ((get column-types transformation) cell)
     (transformation cell)))
-  
 
-(defmulti set-cell-value! 
+
+(defmulti set-cell-value!
   "Schreibt den als Argument (String, Date oder Double) uebergebenen
    Wert in die Tabellenzelle"
   (fn [c v] (type v)))
-(defmethod set-cell-value! java.lang.String [c v] 
+(defmethod set-cell-value! java.lang.String [c v]
   (.setCellValue c v))
-(defmethod set-cell-value! java.util.Date [c v] 
+(defmethod set-cell-value! java.util.Date [c v]
   (doto c
     (.setCellValue v)
     (apply-date-format! "m/d/yy")))
-(defmethod set-cell-value! java.lang.Double [c v] 
+(defmethod set-cell-value! java.lang.Double [c v]
   (.setCellValue c v))
-(defmethod set-cell-value! java.lang.Integer [c v] 
+(defmethod set-cell-value! java.lang.Integer [c v]
   (.setCellValue c (double v)))
-(defmethod set-cell-value! java.lang.Long [c v] 
+(defmethod set-cell-value! java.lang.Long [c v]
   (.setCellValue c (double v)))
 (defmethod set-cell-value! nil [c v])
 
 
-(defmulti create-cell! 
+(defmulti create-cell!
   "Erzeugt eine neue Zelle in einer vorhandenen Tabellenzeile. Die Bezeichnung
    der Spalte kann als String (z.b. 'A'), Keyword (z.B. ':A') oder Integer (z.B. '0')
    erfolgen"
   (fn [r c]
     (type c)))
-(defmethod create-cell! java.lang.String         [r c] 
+(defmethod create-cell! java.lang.String         [r c]
   (create-cell! r (CellReference/convertColStringToIndex c)))
-(defmethod create-cell! clojure.lang.Keyword     [r c] 
+(defmethod create-cell! clojure.lang.Keyword     [r c]
   (create-cell! r (name c)))
-(defmethod create-cell! java.lang.Integer        [r c] 
+(defmethod create-cell! java.lang.Integer        [r c]
   (get-create-cell! r c))
-(defmethod create-cell! java.lang.Long           [r c] 
+(defmethod create-cell! java.lang.Long           [r c]
   (get-create-cell! r (int c)))
 
 
@@ -619,12 +640,12 @@ assoziativen Speicher (map):
   (try (.getCell r i)
        (catch Exception e (prn "Der Cell-Index " i " existiert nicht"))))
 
-  
+
 (defn get-create-cell!
  "Liefert eine Referenz auf ein 'Cell'-Objekt, das durch die Angaben
   Reihe 'r' und Zellennummer 'i' bestimmt wird. Wenn die Zelle nicht besteht
   wird eine neue angelegt."
-  [^Row r 
+  [^Row r
    i]
   (let [cell (.getCell r (int i))]
     (if (nil? cell)
@@ -636,7 +657,7 @@ assoziativen Speicher (map):
 existiert, wird diese neu erzeugt (z.B. wenn die aktuelle Zelle
 die letzte der Zeile ist."
  [^Cell cell]
- (get-create-cell! (.getRow cell) 
+ (get-create-cell! (.getRow cell)
                    (+ (.getColumnIndex cell) 1)))
 
 ;;; ---------------------------------------------------------------------------
@@ -671,7 +692,7 @@ wird nil zurueckgegeben."
 "Wandelt jeden Datentyp in einer Zelle grundsätzlich in einen String-Wert um."
   [c]
   ;; (condp = (type v)
-  ;;   java.lang.String   
+  ;;   java.lang.String
   ;;   java.lang.Double   (.format (DecimalFormat. "#,###.00") v)
   ;;   java.util.Date     (.format (SimpleDateFormat. "dd.MM.yyyy") v)
   ;;   nil)
@@ -687,17 +708,17 @@ wird nil zurueckgegeben."
 
 
 (defn columnindex-value-map
-  "Liest eine Tabellenzeile und erzeugt eine Map mit der Spaltennummer und 
+  "Liest eine Tabellenzeile und erzeugt eine Map mit der Spaltennummer und
 dem Zellenwert.
    Zeilennummern beginnen bei null.
    z. B. {0 2 , 1 Wert , 2 2 , 3 Hello}"
   ([#^Sheet sheet row-num]
     (let [rows (get-row sheet row-num)]
       (into
-        {} 
+        {}
         (map (fn [c]
-               {(.getColumnIndex c) 
-                (get-transformed-cell-value c all->varchar)}) 
+               {(.getColumnIndex c)
+                (get-transformed-cell-value c all->varchar)})
              rows))))
   ([#^Sheet sheet row-num first-col]
     (filter (fn [t] (>= (key t) first-col))
@@ -718,23 +739,23 @@ Parameter:
                 in den der Zellenwert umgewandelt werden soll
                 z. B. {0 varchar 1 double 2 date}
 - begin-row:    in welcher Zeile begonnen wird
-Bsp:      
+Bsp:
 (db-values-seq sh {0 spalte1 1 spalte2} {0 varchar 1 varchar} 0)
-({:spalte1 00, :spalte2 bb} 
-  {:spalte1 11, :spalte2 11bb} 
-  {:spalte1 22, :spalte2 22bb} 
+({:spalte1 00, :spalte2 bb}
+  {:spalte1 11, :spalte2 11bb}
+  {:spalte1 22, :spalte2 22bb}
   {:spalte1 33, :spalte2 33bb})"
   ([sheet columnnames db-types begin-row]
      (db-values-seq sheet columnnames db-types begin-row (get-last-row-num sheet)))
   ([sheet columnnames db-types begin-row end-row]
-     (let [rows (filter 
+     (let [rows (filter
                  (fn [r] (and (>= (.getRowNum r) begin-row)
-                              (<= (.getRowNum r) end-row))) 
+                              (<= (.getRowNum r) end-row)))
                  (row-seq sheet))]
-       (for [r rows] 
-         (into 
+       (for [r rows]
+         (into
           {}
-          (map 
+          (map
            (fn [cnx]
              {(keyword (val cnx))
               (get-transformed-cell-value (get-create-cell! r (key cnx))
@@ -753,10 +774,10 @@ Bsp:
 
 
 
- 
+
 ;;; ---------------------------------------------------------------------------
 ;;; Allgemeine Hilfsfunktionen
- 
+
 (defn write-header!
   "Schreibt die Spaltenueberschriften in das Ziel-Tabellenblatt.
    Zeilennummern beginnen bei null."
@@ -764,9 +785,9 @@ Bsp:
     (write-header! cloumn-name-map (nth (row-seq dest-sheet) dest-row-num)))
   ([cloumn-name-map #^Row dest-row]
     (doseq [[c v] cloumn-name-map]
-      (-> 
+      (->
         dest-row
-        (get-create-cell! (.getColumnIndex c)) 
+        (get-create-cell! (.getColumnIndex c))
         (.setCellValue v)))))
 
 
@@ -783,12 +804,19 @@ Bsp:
 (defn last-day-in-month [m y]
 "Ermittlung des letzten Tages eines Monats."
   (->(doto
-       (GregorianCalendar.) 
+       (GregorianCalendar.)
        (.set Calendar/DATE 1)
-       (.set Calendar/MONTH m) 
-       (.set Calendar/YEAR y) 
+       (.set Calendar/MONTH m)
+       (.set Calendar/YEAR y)
        (.add Calendar/DATE -1))
     (.get Calendar/DATE)))
 
 
 
+(def wb (load-workbook "/Users/anwender/Documents/kommentare.xls"))
+
+(def sh (get-sheet wb 0 ))
+
+(def m (indexed-value-map sh :comment-key))
+m
+(get-value-by-index sh "AAA")

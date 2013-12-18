@@ -4,7 +4,7 @@
   <groupId>excellence</groupId>
   <artifactId>excellence</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.2</version>
+  <version>1.0.3</version>
   <name>excellence</name>
   <description>Funktionen für die Datenextraktion aus Excel-Dateien</description>
   <url>http://github.com/josch1976/excellence</url>
@@ -17,7 +17,7 @@
   <scm>
     <connection>scm:git:git://github.com/josch1976/excellence.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/josch1976/excellence.git</developerConnection>
-    <tag>0876a259306daf487464c3b4aee55db8040e4dcc</tag>
+    <tag>fab10f81bb81523e2672b502d2e89f55d26542cd</tag>
     <url>https://github.com/josch1976/excellence</url>
   </scm>
   <build>
