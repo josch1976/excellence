@@ -119,11 +119,18 @@ Parameter:
   "aktualisiere den Zellbereich für einen benannten Bereich"
   [^Workbook workbook ref-name new-ref-string]
   (let [named (.getName workbook ref-name)]
-    (.setRefersToFormula
-     named
-     (str (first (clojure.string/split (.getRefersToFormula named) #"!"))
-          "!"
-          new-ref-string))))
+    (.setRefersToFormula named
+                         (str (.getSheetName named)  "!" new-ref-string))))
+
+(defn has-named-range?
+  [^Workbook workbook ref-name]
+  (> (.getNameIndex workbook ref-name) -1))
+
+(defn remove-named-range!
+  [^Workbook workbook ref-name]
+  (let [i (.getNameIndex workbook ref-name)]
+    (when (> i 0)
+      (.removeName workbook i))))
 
 
 ;;; ---------------------------------------------------------------------------
@@ -272,7 +279,6 @@ die letzte des Blattes ist."
    (for [row (doall (row-seq sheet))]
      (delete-row! row)))
   sheet)
-
 
 (defn row-seq
   "Liefert eine lazy sequence aller Zeilen einer Arbeitsmappe."
@@ -812,11 +818,3 @@ Bsp:
     (.get Calendar/DATE)))
 
 
-
-(def wb (load-workbook "/Users/anwender/Documents/kommentare.xls"))
-
-(def sh (get-sheet wb 0 ))
-
-(def m (indexed-value-map sh :comment-key))
-m
-(get-value-by-index sh "AAA")

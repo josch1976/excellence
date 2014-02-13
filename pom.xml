@@ -1,10 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>excellence</groupId>
   <artifactId>excellence</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.3</version>
+  <version>1.0.6</version>
   <name>excellence</name>
   <description>Funktionen für die Datenextraktion aus Excel-Dateien</description>
   <url>http://github.com/josch1976/excellence</url>
@@ -17,7 +16,7 @@
   <scm>
     <connection>scm:git:git://github.com/josch1976/excellence.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/josch1976/excellence.git</developerConnection>
-    <tag>fab10f81bb81523e2672b502d2e89f55d26542cd</tag>
+    <tag>69dbcc81c05378cc42f834411678a0a93f4ab58c</tag>
     <url>https://github.com/josch1976/excellence</url>
   </scm>
   <build>
@@ -36,7 +35,7 @@
         <directory>resources</directory>
       </testResource>
     </testResources>
-    <directory>target</directory>
+    <directory>target/</directory>
     <outputDirectory>target/classes</outputDirectory>
   </build>
   <repositories>
@@ -65,7 +64,7 @@
     <dependency>
       <groupId>org.clojure</groupId>
       <artifactId>clojure</artifactId>
-      <version>1.4.0</version>
+      <version>1.5.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.poi</groupId>
@@ -76,6 +75,18 @@
       <groupId>org.apache.poi</groupId>
       <artifactId>poi-ooxml</artifactId>
       <version>3.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.clojure</groupId>
+      <artifactId>tools.nrepl</artifactId>
+      <version>0.2.3</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>clojure-complete</groupId>
+      <artifactId>clojure-complete</artifactId>
+      <version>0.2.3</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

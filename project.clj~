@@ -1,8 +1,8 @@
-(defproject excellence "1.0.0-SNAPSHOT"
-  :description "Funktionen für die Datenextraktion und Analyse von Excel-Dateien"
-  :url "http://beispiel.de/fixme"
+(defproject excellence "1.0.5"
+  :description "Funktionen für die Datenextraktion aus Excel-Dateien"
+  :url "http://github.com/josch1976/excellence"
   :license {:name "MIT License"
-            :url "http://http://en.wikipedia.org/wiki/MIT_License"}
-  :dependencies [[org.clojure/clojure "1.4.0"]
-                 [org.apache.poi/poi "3.7"]
-                 [org.apache.poi/poi-ooxml "3.7"]])
+            :url "http:///en.wikipedia.org/wiki/MIT_License"}
+  :dependencies [[org.clojure/clojure "1.5.1"]
+		 [org.apache.poi/poi "3.9"]
+		 [org.apache.poi/poi-ooxml "3.9"]])
